@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Booking - Luxe Mobile Care</title>
+    <link rel="icon" type="image/png" href="images/logo-image-mobile-care.png">
+
+
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600&family=Oswald:wght@500;600&display=swap" rel="stylesheet">
+
+</head>
+
+<body>
+    <nav class="navbar navbar-light bg-light px-3">
+        <a class="navbar-brand" href="index.html">← Back to Home</a>
+    </nav>
+
+    <div id="root"></div>
+
+        <script type="text/babel">
+            const weekdaySlots = ["08:00", "10:00", "12:00", "14:00", "16:00"];
+            const weekendSlots = ["10:00", "12:00", "14:00"];
+
+            function BookingForm() {
+            const [form, setForm] = React.useState({
+                name: '', vehicle: '', package: '', date: '', time: ''
+            });
+
+            const [availableTimes, setAvailableTimes] = React.useState([]);
+
+            const handleChange = (e) => {
+                setForm({ ...form, [e.target.name]: e.target.value });
+            };
+
+            const handleDateChange = (e) => {
+                const value = e.target.value;
+                const selectedDate = new Date(value);
+                const today = new Date();
+
+                let slots = [];
+
+                if (
+                    selectedDate.getFullYear() === today.getFullYear() &&
+                    selectedDate.getMonth() === today.getMonth() &&
+                    selectedDate.getDate() === today.getDate()
+                ) {
+                    // Stop past times on the current day
+                    const currentHour = today.getHours();
+                    const currentMinute = today.getMinutes();
+
+                    const allSlots = (today.getDay() === 0 || today.getDay() === 6) ? weekendSlots : weekdaySlots;
+
+                    slots = allSlots.filter((time) => {
+                    const [hourStr, minStr, period] = time.match(/\d+|\w+/g);
+                    let hour = parseInt(hourStr, 10);
+                    const minute = parseInt(minStr || "0", 10);
+
+                    if (period === "PM" && hour !== 12) hour += 12;
+                    if (period === "AM" && hour === 12) hour = 0;
+
+                    return hour > currentHour || (hour === currentHour && minute > currentMinute);
+                    });
+                } else {
+                    slots = (selectedDate.getDay() === 0 || selectedDate.getDay() === 6) ? weekendSlots : weekdaySlots;
+                }
+
+                setAvailableTimes(slots);
+                setForm({ ...form, date: value });
+                };
+
+
+                const handleSubmit = (e) => {
+                    e.preventDefault();
+                    const now = new Date();
+                    const selectedDateTime = new Date(`${form.date}T${form.time}`);
+                    if (selectedDateTime < now) {
+                        alert("Sorry but that ime slot has passed.");
+                        return;
+                    }
+                    alert(`Booking for ${form.name} at ${form.time} on ${form.date} confirmed.`);
+                };
+
+
+            return (
+                <form onSubmit={handleSubmit}>
+                <h2>Book Your Appointment</h2>
+                <label>Name</label>
+                <input type="text" name="name" onChange={handleChange} required />
+                
+                <label>Vehicle Type</label>
+                <select name="vehicle" onChange={handleChange} required>
+                    <option value="">Select...</option>
+                    <option value="Small Car">Small Car</option>
+                    <option value="SUV">SUV</option>
+                    <option value="Van">Van / Truck</option>
+                </select>
+
+                <label>Package</label>
+                <select name="package" onChange={handleChange} required>
+                    <option value="">Select...</option>
+                    <option value="Basic">Basic</option>
+                    <option value="Deluxe">Deluxe</option>
+                </select>
+
+                <label>Date</label>
+                <input
+                    type="date"
+                    name="date"
+                    onChange={handleDateChange}
+                    required
+                    min={new Date().toISOString().split('T')[0]}
+                />
+
+                <label>Time</label>
+                <select name="time" onChange={handleChange} required>
+                    <option value="">Select a time</option>
+                    {availableTimes.map((time) => (
+                    <option key={time} value={time}>{time}</option>
+                    ))}
+                </select>
+
+                <button type="submit">Confirm Booking</button>
+                </form>
+            );
+            }
+
+            const root = ReactDOM.createRoot(document.getElementById('root'));
+            root.render(<BookingForm />);
+        </script>
+</body>
+</html>
+
